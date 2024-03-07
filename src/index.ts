@@ -1,11 +1,19 @@
 import express from 'express';
 import dotenv from 'dotenv';
-import { ScoredArticle, Article, JigsawArticle, JigsawLayout } from '@hyggeclub/models';
+import { ScoredArticle, JigsawArticle, JigsawLayout } from '@hyggeclub/models';
 
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
+
+// Add this line to enable JSON body parsing
+app.use(express.json());
+
+app.get('/test', (req, res) => {
+    res.status(200).send('Service is running!');
+});
+
 
 app.get('/test', (req, res) => {
     res.status(200).send('Service is running!');
@@ -42,13 +50,14 @@ app.post('/assign-layouts', (req, res) => {
       return res.status(400).send({ message: "Missing 'articles' in request body" });
   }
   console.log("assigning layouts");
-  console.log(`body:${req.body}`);
+  
+  // Updated to correctly log the request body for debugging
+  console.log(`body: ${JSON.stringify(req.body)}`);
   
   const scoredArticles: ScoredArticle[] = req.body.articles;
   const jigsawArticles = assignJigsawLayout(scoredArticles);
   res.status(200).json({ jigsawArticles });
 });
-
 
 app.listen(port, () => {
   console.log(`Service listening at http://localhost:${port}`);
