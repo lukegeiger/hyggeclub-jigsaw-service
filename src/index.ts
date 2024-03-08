@@ -49,10 +49,10 @@ app.post('/assign-layouts', (req, res) => {
   if (!req.body.articles) {
       return res.status(400).send({ message: "Missing 'articles' in request body" });
   }
-  console.log("assigning layouts");
+  console.log("creating layouts");
   
   // Updated to correctly log the request body for debugging
-  console.log(`body: ${JSON.stringify(req.body)}`);
+  // console.log(`body: ${JSON.stringify(req.body)}`);
   
   const scoredArticles: ScoredArticle[] = req.body.articles;
   const jigsawArticles = assignJigsawLayout(scoredArticles);

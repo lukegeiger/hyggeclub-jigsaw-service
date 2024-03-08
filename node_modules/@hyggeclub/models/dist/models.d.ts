@@ -1,48 +1,52 @@
+/**
+ * Represents a category for content classification.
+ */
 export interface Category {
     name: string;
     category_id: string;
     icon_name: string;
     subscribed?: boolean;
 }
-export interface ExtendedCategory extends Category {
-    subscribed?: boolean;
-}
-export interface ConversationMessage {
-    role: 'user' | 'system' | 'assistant';
-    content: string;
-}
-export interface ArticleData {
+/**
+ * Defines the media type of content items.
+ */
+export type MediaType = 'article' | 'video' | 'audio' | 'post' | 'business' | 'event' | 'update' | 'weather';
+/**
+ * The base model for all content items within the system.
+ */
+export interface ContentItem {
     id: string;
     title: string;
     description: string;
-    word_count: number | null;
-    authors: string[] | null;
+    timestamp: Date;
+    tags?: string[];
+    media_type: MediaType;
+    additional_data?: Record<string, any>;
 }
-export interface ProcessedArticleData extends ArticleData {
-    tags: string[];
-    hygge_score: number;
-    improved_description: string;
-    reason: string;
-    original_description: string;
-    eta_to_read: number;
-}
-export type Article = {
-    title: string;
+/**
+ * Detailed model for articles, extending the base ContentItem.
+ */
+export interface ArticleContentItem extends ContentItem {
     url: string;
-    description: string;
-    authors: string[];
-    date: string;
-    unix_date: number;
-    id: string;
     image_url: string | null;
-    thumbnail_image_url?: string | null;
-    scraped_text: string | null;
+    thumbnail_image_url: string | null;
+    authors: string[] | null;
     date_published: string | null;
     word_count: number | null;
     domain: string | null;
     excerpt: string | null;
     news_source: NewsSource;
-};
+    hygge_description: string | null;
+    hygge_score: number | null;
+    reason_for_score: string | null;
+    eta_to_read: number | null;
+    personal_score: number | null;
+    final_score: number | null;
+    jigsaw_layout: 'prominent' | 'average' | 'minor' | null;
+}
+/**
+ * Represents the source of a news article.
+ */
 export interface NewsSource {
     link: string;
     category_id: string;
@@ -51,42 +55,61 @@ export interface NewsSource {
     logo_url: string;
     color_hex: string;
 }
-export type HyggeArticle = Article & {
-    hygge_description: string;
-    tags: string[];
-    hygge_score: number;
-    reason_for_score: string;
-    eta_to_read: number;
-};
-export type ScoredArticle = HyggeArticle & {
-    personal_score: number;
-    final_score: number;
-};
-export type JigsawArticle = ScoredArticle & {
-    jigsaw_layout: JigsawLayout;
-};
-export type JigsawLayout = 'prominent' | 'average' | 'minor';
-export type MediaType = 'article' | 'video' | 'audio' | 'post' | 'business';
-export type ContentDetails = {
-    title?: string;
-    description?: string;
-    tags?: string[];
-    media_type: MediaType;
-    media_url?: string;
-    additional_data?: Record<string, any>;
-};
-export type Interaction = {
+/**
+ * Model for event content items, extending the base ContentItem.
+ */
+export interface EventContentItem extends ContentItem {
+    location: string;
+    startDate: Date;
+    endDate: Date;
+}
+/**
+ * Represents a message in a conversation, could be from a user or the system.
+ */
+export interface ConversationMessage {
+    role: 'user' | 'system' | 'assistant';
+    content: string;
+}
+/**
+ * Defines the types of interactions users can have with content items.
+ */
+export type InteractionType = 'view' | 'like' | 'share' | 'comment' | 'follow' | 'purchase' | 'save';
+/**
+ * Tracks interactions users have with content items.
+ */
+export interface Interaction {
     interaction_id: string;
     user_id: string;
     interaction_type: InteractionType;
     content_id: string;
-    content_details: ContentDetails;
+    content_details: ContentItem;
     timestamp: Date;
     duration_in_seconds?: number;
     interaction_data?: Record<string, any>;
-};
-export type InteractionType = 'view' | 'like' | 'share' | 'comment' | 'follow' | 'purchase' | 'save';
-export type WeightMap = {
-    [key in InteractionType]: number;
-};
-export declare const weights: WeightMap;
+}
+/**
+ * Defines the weighting of different types of interactions to quantify their impact.
+ */
+export declare const weights: Record<InteractionType, number>;
+/**
+ * Represents a content item stored in Redis cache.
+ */
+export interface RedisContentItem {
+    id: string;
+    metadata: ContentItem;
+}
+/**
+ * Models a section of the user feed, grouping content items by theme or category.
+ */
+export interface FeedSection {
+    title: string | null;
+    contentItems: ContentItem[];
+}
+/**
+ * Represents the structure of a user's feed, including paginated sections of content.
+ */
+export interface UserFeed {
+    sections: FeedSection[];
+    next_cursor: string | null;
+    has_more: boolean;
+}
