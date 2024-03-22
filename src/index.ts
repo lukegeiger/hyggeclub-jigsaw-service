@@ -67,16 +67,19 @@ async function fetchUserFeedSize(userId: string): Promise<number> {
 
 
 function computeCompositeScore(article: ArticleContentItem): number {
-  const hyggeWeight = 0.4;
-  const finalScoreWeight = 0.4;
-  const recencyWeight = 0.2;
+  const hyggeWeight = 0.5; // Increased weight for hyggeScore
+  const finalScoreWeight = 0.2; // Decreased weight to balance out the increase in other weights
+  const recencyWeight = 0.3; // Increased weight for recency
+  
   const hyggeComponent = article.hygge_score ? article.hygge_score * hyggeWeight : 0;
   const finalScoreComponent = article.final_score ? article.final_score * finalScoreWeight : 0;
+  
   const currentDate = new Date();
   const articleDate = new Date(article.ingested_date);
   const recencyDays = Math.max((currentDate.getTime() - articleDate.getTime()) / (1000 * 3600 * 24), 1);
-  const recencyScore = Math.max(10 - Math.log(recencyDays), 0);
+  const recencyScore = Math.max(10 - Math.log(recencyDays), 0); // Assuming the log-based recency score is desirable
   const recencyComponent = recencyScore * recencyWeight;
+  
   return hyggeComponent + finalScoreComponent + recencyComponent;
 }
 
