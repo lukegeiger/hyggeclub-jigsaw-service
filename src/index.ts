@@ -38,7 +38,7 @@ app.post('/assign-layouts/:userId', async (req: Request, res: Response) => {
     return res.status(400).send({ message: "Missing 'articles' in request body" });
   }
   if (!userId) {
-    return res.status(400).send({ message: "Missing 'userId' in request path" });
+    console.log('anon layout')
   }
 
   try {
@@ -54,14 +54,26 @@ app.listen(port, () => {
   console.log(`Service listening at http://localhost:${port}`);
 });
 
-async function fetchUserFeedSize(userId: string): Promise<number> {
-  const personalizedFeedKey = `userPersonalizedFeed:sorted:${userId}`;
-  try {
-    const feedSize = await redisClient.zCard(personalizedFeedKey);
-    return feedSize;
-  } catch (error) {
-    console.error('Error fetching user feed size from Redis:', error);
-    return 0; // Fallback to 0 in case of any Redis errors
+async function fetchUserFeedSize(userId: string | null): Promise<number> {
+  if (userId != null) {
+    const personalizedFeedKey = `userPersonalizedFeed:sorted:${userId}`;
+    try {
+      const feedSize = await redisClient.zCard(personalizedFeedKey);
+      return feedSize;
+    } catch (error) {
+      console.error('Error fetching user feed size from Redis:', error);
+      return 0; // Fallback to 0 in case of any Redis errors
+    }
+  } else {
+    const personalizedFeedKey = `anonComprehensiveFeed:sorted`;
+
+    try {
+      const feedSize = await redisClient.zCard(personalizedFeedKey);
+      return feedSize;
+    } catch (error) {
+      console.error('Error fetching user feed size from Redis:', error);
+      return 0; // Fallback to 0 in case of any Redis errors
+    }
   }
 }
 
@@ -83,7 +95,7 @@ function computeCompositeScore(article: ArticleContentItem): number {
   return hyggeComponent + finalScoreComponent + recencyComponent;
 }
 
-async function assignJigsawLayout(userId: string, articles: ArticleContentItem[]): Promise<ArticleContentItem[]> {
+async function assignJigsawLayout(userId: string | null, articles: ArticleContentItem[]): Promise<ArticleContentItem[]> {
   const feedSize = await fetchUserFeedSize(userId);
   const adjustmentFactor = adjustThresholdsBasedOnFeedSize(feedSize);
   const scores = articles.map(computeCompositeScore);
